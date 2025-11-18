@@ -1,0 +1,41 @@
+name: Build and Deploy Blazor App to Azure
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Setup .NET SDK
+    - name: Setup .NET 9
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    # Restore dependencies
+    - name: Restore dependencies
+      run: dotnet restore BlazorAppDemo/BlazorAppDemo.csproj
+
+    # Build project
+    - name: Build project
+      run: dotnet build BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --no-restore
+
+    # Publish project
+    - name: Publish project
+      run: dotnet publish BlazorAppDemo/BlazorAppDemo.csproj --configuration Release --output ./publish
+
+    # Deploy to Azure Web App
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: testcouragewebapp2
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./publish
